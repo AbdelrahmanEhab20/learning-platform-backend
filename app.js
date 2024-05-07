@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const userRouter = require("./routes/userRouter");
 const courseRouter = require("./routes/courseRouter");
 const courseSectionRouter = require("./routes/courseSectionRouter");
+const progressRouter = require("./routes/progressRouter");
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use("/", userRouter);
 app.use("/", courseRouter);
 app.use("/", courseSectionRouter);
+app.use("/", progressRouter);
 
 // ? Starting the server
 app.listen(PORT, console.log(`Server is running now on PORT ${PORT}`));
