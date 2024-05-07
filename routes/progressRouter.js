@@ -10,5 +10,10 @@ progressRouter.post(
   isAuthenticated,
   progressCtrl.applyToCourse
 );
-
+// ! Start section
+progressRouter.put(
+  "/api/v1/progress/start-section",
+  isAuthenticated,
+  progressCtrl.startSection
+);
 module.exports = progressRouter;
