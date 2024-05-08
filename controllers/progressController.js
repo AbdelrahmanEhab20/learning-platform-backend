@@ -57,7 +57,7 @@ const progressController = {
     if (!courseProgress) {
       return res
         .status(404)
-        .json({ message: "Course not found in user' progress" });
+        .json({ message: "Course not found in user's progress" });
     }
     // ! Check if section is already started
     const isSectionExisted = courseProgress.sections.find(
