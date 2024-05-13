@@ -10,6 +10,12 @@ userRouter.post("/api/v1/users/login", userCtrl.login);
 userRouter.get("/api/v1/users/lists", userCtrl.lists);
 // ! profile router
 userRouter.get("/api/v1/users/profile", isAuthenticated, userCtrl.profile);
+// // ! profile router
+// // userRouter.get(
+//  //  "/api/v1/users/profile/:courseId",
+//   //  isAuthenticated,
+// //   userCtrl.profilePublic
+// // );
 // ! students positions router
 userRouter.get(
   "/api/v1/users/student-position/:courseId",

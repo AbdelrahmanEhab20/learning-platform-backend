@@ -16,4 +16,10 @@ progressRouter.put(
   isAuthenticated,
   progressCtrl.startSection
 );
+// ! update section progress router
+progressRouter.post(
+  "/api/v1/progress/update",
+  isAuthenticated,
+  progressCtrl.updateProgress
+);
 module.exports = progressRouter;

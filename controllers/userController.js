@@ -67,18 +67,105 @@ const userCtrl = {
       email: user.email,
     });
   }),
-  // ! Profile
+  // // ! Profile
+  // // profilePublic: asyncHandler(async (req, res) => {
+  //   // res.json({
+  //   //   message: "Welcome To Tour Profile",
+  //   // });
+  //   // ! Get user id from query ?
+  //  //  const userId = req.query.userId;
+  //   // ! Get course id from params
+  //  //  const { courseId } = req.params;
+  //   // ! Find All Users
+  //   // const foundUser = await User.findOne({
+  //   //   _id: userId,
+  // //     "progress.courseId": courseId,
+  // //   });
+  ////    if (!foundUser) {
+  // // //     return res.status(404).json({ message: "User or Course Not Found" });
+  // //   }
+  //   // ! Sending Response to the User
+  //  //   res.json({
+  //  //     message: "User Found Successfully For This Course",
+  //  //     user: {
+  //  //       id: foundUser._id,
+  //  //       username: foundUser.username,
+  //  //      role: foundUser.role,
+  //  //      email: foundUser.email,
+  //   //     dateJoined: foundUser.createdAt,
+  //   //     position: foundUser.position,
+  //   //   },
+  //   // });
+  // // }),
+  // ! Profile Public with progress
   profile: asyncHandler(async (req, res) => {
-    res.json({
-      message: "Welcome To Tour Profile",
+    // ! Get user id from query ?
+    const userId = req.user;
+    // ! Find All Users
+    const foundUser = await User.findById(userId).populate({
+      path: "progress",
+      populate: [
+        {
+          path: "courseId",
+          model: "Course",
+          populate: { path: "sections", model: "CourseSection" },
+        },
+        {
+          path: "sections.sectionId",
+        },
+      ],
     });
+    if (!foundUser) {
+      return res.status(404).json({ message: "User Not Found" });
+    }
+    // ! Get course id from params
+    const courseIdQuery = req.query.courseId;
+    console.log(req.query);
+    // ! Filter progress for specific course if course params is provided
+    const courseProgress = courseIdQuery
+      ? foundUser.progress.find(
+          (prog) => prog.courseId._id.toString() === courseIdQuery.toString()
+        )
+      : null;
+    // ! If Course founded with the progress then calculate the summary
+    let progressSummary = null;
+    if (courseProgress) {
+      const totalSections = courseProgress.courseId.sections.length;
+      console.log(totalSections);
+      let completed = 0,
+        onGoing = 0,
+        notStarted = 0;
+      courseProgress.sections.forEach((section) => {
+        if (section.status === "Completed") {
+          completed++;
+        } else if (section.status === "In Progress") {
+          onGoing++;
+        } else {
+          notStarted++;
+        }
+        // ? update the object result
+        progressSummary = {
+          courseId: courseProgress.courseId._id,
+          courseTitle: courseProgress.courseId.title,
+          totalSections: totalSections,
+          completed: completed,
+          onGoing: onGoing,
+          notStarted: notStarted,
+        };
+        // ! Sending Response to the User
+        res.json({
+          message: "User Found Successfully For This Course",
+          progressSummary,
+        });
+      });
+    }
   }),
   //! Find all users
   lists: asyncHandler(async (req, res) => {
     const allUsersFound = await User.find({});
     res.json(allUsersFound);
   }),
-  //! Positioning of students based on course
+  //! Positioning of students
   studentPosition: asyncHandler(async (req, res) => {
     const { courseId } = req.params;
     // ! Validate the course by id
@@ -97,9 +184,7 @@ const userCtrl = {
     let userProgressData = allUsersFound
       .map((singleUser) => {
         const courseProgress = singleUser.progress.find(
-          (courseProg) =>
-            courseProg.courseId &&
-            courseProg.courseId._id.toString() === courseId
+          (cp) => cp.courseId && cp.courseId._id.toString() === courseId
         );
         if (!courseProgress) {
           return null;

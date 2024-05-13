@@ -68,10 +68,49 @@ const progressController = {
     }
     // ! Check if section is already started
     courseProgress.sections.push({ sectionId, status: "Not Started" });
-    courseProgress.save();
-    userFound.save();
+    await courseProgress.save();
+    await userFound.save();
     // ! Send the result
     return res.status(200).json({ message: "Section started successfully" });
+  }),
+  // ! Update progress of section
+  updateProgress: asyncHandler(async (req, res) => {
+    const { courseId, sectionId, newStatus } = req.body;
+    // ! Find the user
+    const userId = req.user;
+    const userFound = await User.findOne({
+      _id: userId,
+      "progress.courseId": courseId,
+    });
+    if (!userFound) {
+      return res.status(404).json({ message: "User or Course Not Found" });
+    }
+    // ! Find the course progress and update section status
+    const courseProgress = userFound.progress.find(
+      (prog) => prog.courseId.toString() === courseId.toString()
+    );
+    if (!courseProgress) {
+      return res
+        .status(404)
+        .json({ message: "Course not found in user's progress" });
+    }
+    const sectionProgress = courseProgress.sections.find(
+      (sec) => sec.sectionId.toString() === sectionId.toString()
+    );
+    if (sectionProgress) {
+      sectionProgress.status = newStatus;
+      await sectionProgress.save();
+    } else {
+      return res
+        .status(404)
+        .json({ message: "Section not found in user's progress" });
+    }
+
+    await userFound.save();
+    // ! Send the result
+    return res
+      .status(200)
+      .json({ message: "Section progress updated successfully" });
   }),
 };
 
