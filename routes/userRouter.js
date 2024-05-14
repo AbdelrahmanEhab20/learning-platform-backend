@@ -8,14 +8,18 @@ userRouter.post("/api/v1/users/register", userCtrl.register);
 userRouter.post("/api/v1/users/login", userCtrl.login);
 // ! find all users router
 userRouter.get("/api/v1/users/lists", userCtrl.lists);
-// ! profile router
-userRouter.get("/api/v1/users/profile", isAuthenticated, userCtrl.profile);
-// // ! profile router
-// // userRouter.get(
-//  //  "/api/v1/users/profile/:courseId",
-//   //  isAuthenticated,
-// //   userCtrl.profilePublic
-// // );
+// ! profile PUBLIC router
+userRouter.get(
+  "/api/v1/users/public-profile/:courseId",
+  // isAuthenticated,
+  userCtrl.publicProfile
+);
+// ! PRIVATE  profile router
+userRouter.get(
+  "/api/v1/users/private-profile",
+  isAuthenticated,
+  userCtrl.privateProfile
+);
 // ! students positions router
 userRouter.get(
   "/api/v1/users/student-position/:courseId",

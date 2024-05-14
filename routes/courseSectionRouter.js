@@ -1,6 +1,7 @@
 const express = require("express");
 const isAuthenticated = require("../middlewares/isAuth");
 const courseSectionCtrl = require("../controllers/courseSectionCtrl");
+const { isInstructor } = require("../middlewares/roleAccessMiddleware");
 
 const courseSectionRouter = express.Router();
 
@@ -8,6 +9,7 @@ const courseSectionRouter = express.Router();
 courseSectionRouter.post(
   "/api/v1/course-sections/create/:courseId",
   isAuthenticated,
+  isInstructor,
   courseSectionCtrl.create
 );
 // ! Get All Sections
@@ -19,20 +21,23 @@ courseSectionRouter.get(
 // ! Update Section
 courseSectionRouter.put(
   "/api/v1/course-sections/:sectionId",
-  // isAuthenticated,
-  // isInstructor,
+
+  isAuthenticated,
+  isInstructor,
   courseSectionCtrl.update
 );
 // ! Get Section By Id
 courseSectionRouter.get(
   "/api/v1/course-sections/:sectionId",
+  isAuthenticated,
+  isInstructor,
   courseSectionCtrl.getSection
 );
 // ! Delete Section
 courseSectionRouter.delete(
   "/api/v1/course-sections/:sectionId",
-  // isAuthenticated,
-  // isInstructor,
+  isAuthenticated,
+  isInstructor,
   courseSectionCtrl.delete
 );
 

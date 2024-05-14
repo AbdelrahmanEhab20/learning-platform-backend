@@ -67,40 +67,10 @@ const userCtrl = {
       email: user.email,
     });
   }),
-  // // ! Profile
-  // // profilePublic: asyncHandler(async (req, res) => {
-  //   // res.json({
-  //   //   message: "Welcome To Tour Profile",
-  //   // });
-  //   // ! Get user id from query ?
-  //  //  const userId = req.query.userId;
-  //   // ! Get course id from params
-  //  //  const { courseId } = req.params;
-  //   // ! Find All Users
-  //   // const foundUser = await User.findOne({
-  //   //   _id: userId,
-  // //     "progress.courseId": courseId,
-  // //   });
-  ////    if (!foundUser) {
-  // // //     return res.status(404).json({ message: "User or Course Not Found" });
-  // //   }
-  //   // ! Sending Response to the User
-  //  //   res.json({
-  //  //     message: "User Found Successfully For This Course",
-  //  //     user: {
-  //  //       id: foundUser._id,
-  //  //       username: foundUser.username,
-  //  //      role: foundUser.role,
-  //  //      email: foundUser.email,
-  //   //     dateJoined: foundUser.createdAt,
-  //   //     position: foundUser.position,
-  //   //   },
-  //   // });
-  // // }),
   // ! Profile Public with progress
-  profile: asyncHandler(async (req, res) => {
+  publicProfile: asyncHandler(async (req, res) => {
     // ! Get user id from query ?
-    const userId = req.user;
+    const userId = req.query.userId;
     // ! Find All Users
     const foundUser = await User.findById(userId).populate({
       path: "progress",
@@ -119,12 +89,12 @@ const userCtrl = {
       return res.status(404).json({ message: "User Not Found" });
     }
     // ! Get course id from params
-    const courseIdQuery = req.query.courseId;
+    const courseIdParams = req.params.courseId;
     console.log(req.query);
     // ! Filter progress for specific course if course params is provided
-    const courseProgress = courseIdQuery
+    const courseProgress = courseIdParams
       ? foundUser.progress.find(
-          (prog) => prog.courseId._id.toString() === courseIdQuery.toString()
+          (prog) => prog.courseId._id.toString() === courseIdParams.toString()
         )
       : null;
     // ! If Course founded with the progress then calculate the summary
@@ -159,6 +129,64 @@ const userCtrl = {
         });
       });
     }
+  }),
+  // ! Profile Public with progress
+  privateProfile: asyncHandler(async (req, res) => {
+    // ! Get user id
+    const userId = req.user;
+    // ! Find All Users
+    const foundUser = await User.findById(userId).populate({
+      path: "progress",
+      populate: [
+        {
+          path: "courseId",
+          model: "Course",
+          populate: { path: "sections", model: "CourseSection" },
+        },
+        {
+          path: "sections.sectionId",
+        },
+      ],
+    });
+    if (!foundUser) {
+      return res.status(404).json({ message: "User Not Found" });
+    }
+
+    // ! Calculate the progress statistics for each course
+    const courseProgress = foundUser.progress.map((courseProg) => {
+      const totalSections = courseProg.courseId.sections.length;
+      let completed = 0,
+        onGoing = 0,
+        notStarted = 0;
+      courseProg.sections.forEach((section) => {
+        if (section.status === "Completed") {
+          completed++;
+        } else if (section.status === "In Progress") {
+          onGoing++;
+        } else {
+          notStarted++;
+        }
+        // ? update the object result
+        return {
+          courseId: courseProg.courseId._id,
+          courseTitle: courseProg.courseId.title,
+
+          totalSections: totalSections,
+          completed: completed,
+          onGoing: onGoing,
+          notStarted: notStarted,
+        };
+      });
+      // ! Prepare response
+      const response = {
+        totalCourses: foundUser.progress.length,
+        courseProg,
+      };
+      res.json({
+        message: "User Found Successfully",
+        response,
+      });
+    });
   }),
   //! Find all users
   lists: asyncHandler(async (req, res) => {
